@@ -38,6 +38,7 @@ def save():
         return jsonify({ 'success': 'saved event' })
     except:
         return jsonify({ 'error': 'Errors #002: Could not save event' })
+
 @app.route('/api/retrieve', methods=['GET'])
 def retrieve():
 
@@ -48,6 +49,9 @@ def retrieve():
         year = request.headers.get('year')
 
         #year is required day cannot be paired with year, otherwise return Errors
+        print(day)
+        print(month)
+        print(year)
         if not year:
             return jsonify({ 'error': 'Error #003: Year parameter is required'})
         elif day and not month:
@@ -87,7 +91,7 @@ def retrieve():
         }})
     except:
         return jsonify({'Error': 'Something went wrong'})
-        
+
 @app.route('/api/delete', methods=['DELETE'])
 def delete():
 
