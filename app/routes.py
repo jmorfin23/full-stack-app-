@@ -1,7 +1,7 @@
 from app import app, db
 from flask import request, jsonify
 from app.models import Event
-
+from app.email import sendEmail
 
 
 #set index route to return nothing so no eerror occurs
@@ -13,31 +13,33 @@ def index():
 #post  is sending information
 #get is retrieving information
 
-#headers?
 @app.route('/api/save', methods=['POST'])
 def save():
-    try:
-        #get headers first
-        title = request.headers.get('title')
-        day = request.headers.get('day')
-        month = request.headers.get('month')
-        year = request.headers.get('year')
-        notes = request.headers.get('notes')
 
-        #if any info is missing give back an error jsonify message
-        if not day or not title or not month or not year or not notes:
-            return jsonify({ 'error': 'Invalid parameters '})
+    #get headers first
+    title = request.headers.get('title')
+    day = request.headers.get('day')
+    month = request.headers.get('month')
+    year = request.headers.get('year')
+    notes = request.headers.get('notes')
+    email = request.headers.get('email')
 
-        #all info is included, save the event
-        event = Event(title=title, day=day, month=month, year=year, notes=notes)
+    #if any info is missing give back an error jsonify message
+    if not day or not title or not month or not year or not notes:
+        return jsonify({ 'error': 'Invalid parameters '})
 
-        #add to db
-        db.session.add(event)
-        db.session.commit()
+    #all info is included, save the event
+    event = Event(title=title, day=day, month=month, year=year, notes=notes)
 
-        return jsonify({ 'success': 'saved event' })
-    except:
-        return jsonify({ 'error': 'Errors #002: Could not save event' })
+    #add to db
+    db.session.add(event)
+    db.session.commit()
+
+    sendEmail(title=title, day=day, month=month, year=year, notes=notes, email=email)
+
+    return jsonify({ 'success': 'saved event' })
+
+    return jsonify({ 'error': 'Errors #002: Could not save event' })
 
 @app.route('/api/retrieve', methods=['GET'])
 def retrieve():
@@ -49,9 +51,6 @@ def retrieve():
         year = request.headers.get('year')
 
         #year is required day cannot be paired with year, otherwise return Errors
-        print(day)
-        print(month)
-        print(year)
         if not year:
             return jsonify({ 'error': 'Error #003: Year parameter is required'})
         elif day and not month:
